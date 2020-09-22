@@ -1,0 +1,152 @@
+---
+title: "Analyse en Composantes Principales"
+author: "Jeu de données temperature"
+output:
+  word_document: default
+---
+Ce jeu de données contient 15 individus et 17 variables, 1 variable qualitative est illustrative.
+
+- - -
+
+```{r, echo = FALSE}
+library(FactoMineR)
+load('D:/Documents/01 Docs/Online Courses/FUN Mooc/03 Analyse des données multidimentionnelles/01 Analyse en composantes principales/04 Mise en oeuvre/01 Température/Workspace.RData')
+```
+### 1. Observation d'individus extrêmes
+L'analyse des graphes ne révèle aucun individu singulier.
+
+- - -
+
+### 2. Distribution de l'inertie
+L'inertie des axes factoriels indique d'une part si les variables sont structurées et suggère d'autre part le nombre judicieux de composantes principales à étudier.
+
+Les 2 premiers axes de l' analyse expriment **96.13%** de l'inertie totale du jeu de données ; cela signifie que 96.13% de la variabilité totale du nuage des individus (ou des variables) est représentée dans ce plan.
+C'est un pourcentage extrêmement élevé, et le premier plan représente donc parfaitement bien la variabilité contenue dans l'ensemble du jeu de données actif.
+Cette valeur est nettement supérieure à la valeur référence de **42.7%**, la variabilité expliquée par ce plan est donc hautement significative
+(cette intertie de référence est le quantile 0.95-quantile de la distribution des pourcentages d'inertie obtenue en simulant 2133 jeux de données aléatoires de dimensions comparables sur la base d'une distribution normale).
+
+Du fait de ces observations, il n'est absolument pas nécessaire pour l'analyse d'interpréter les dimensions suivantes.
+
+```{r, echo = FALSE, fig.height = 3.5, fig.width = 5.5}
+par(mar = c(2.6, 4.1, 1.1, 2.1))
+ggplot2::ggplot(cbind.data.frame(x=1:nrow(res$eig),y=res$eig[,2])) + ggplot2::aes(x=x, y=y)+ ggplot2::geom_col(fill="blue") + ggplot2::xlab("Dimension") + ggplot2::ylab("Pourcentage d'inertie") + ggplot2::ggtitle("Décomposition de l'inertie totale") + ggplot2::theme_light() + ggplot2::theme(plot.title = ggplot2::element_text(hjust =0.5)) + ggplot2::scale_x_continuous(breaks=1:nrow(res$eig))
+```
+
+**Figure 2 - Décomposition de l'inertie totale**
+*Le premier facteur est prépondérant : il explique a lui seul 71.05% de la variabilité totale des données.*
+*Il convient de noter que dans un tel cas, la variabilité liée aux autres composantes peut être dénuée de sens, en dépit d'un pourcentage élevé.*
+
+Une estimation du nombre pertinent d'axes à interpréter suggère de restreindre l'analyse à la description des 2 premiers axes.
+Ces composantes révèlent un taux d'inertie supérieur à celle du quantile 0.95-quantile de distributions aléatoires (96.13% contre 42.7%).
+Cette observation suggère que seuls ces axes sont porteurs d'une véritable information.
+En conséquence, la description de l'analyse sera restreinte à ces seuls axes.
+
+- - -
+
+### 3. Description du plan 1:2
+
+```{r, echo = FALSE, fig.height = 3.5, fig.width = 5.5}
+drawn <-
+c("Brest", "Nice", "Strasbourg", "Marseille", "Lille", "Montpellier", 
+"Grenoble", "Rennes", "Lyon")
+par(mar = c(4.1, 4.1, 1.1, 2.1))
+plot.PCA(res, select = drawn, axes = c(1,2), choix = 'ind', invisible = 'quali', title = '', cex = cex)
+```
+
+**Figure 3.1 - Graphe des individus (ACP)**
+*Les individus libellés sont ceux ayant la plus grande contribution à la construction du plan.*
+
+La probabilité critique du test de Wilks indique la variable dont les modalités sépare au mieux les individus sur le plan (i.e. qui explique au mieux les distances entre individus).
+```{r, echo = FALSE, fig.height = 3.5, fig.width = 5.5}
+wilks.p <-
+c(Région = 0.0033372866507267503)
+wilks.p
+```
+Il n'y a qu'une unique variable qualitative possible pour illustrer les distances entre individus : *Région*.
+
+```{r, echo = FALSE, fig.height = 3.5, fig.width = 5.5}
+sample = sample(rownames(res$call$X), length(rownames(res$call$X)))
+res$call$X = res$call$X[sample,]
+res$ind$coord = res$ind$coord[sample[!sample %in% rownames(res$ind.sup$coord)],]
+res$ind.sup$coord = res$ind.sup$coord[sample[sample %in% rownames(res$ind.sup$coord)],]
+drawn <-
+c("Brest", "Nice", "Strasbourg", "Marseille", "Lille", "Montpellier", 
+"Grenoble", "Rennes", "Lyon")
+hab <-
+"Région"
+par(mar = c(4.1, 4.1, 1.1, 2.1))
+plotellipses(res, axes = 1:2, select = drawn, keepvar = hab, title = '', cex = cex)
+```
+
+**Figure 3.2 - Graphe des individus (ACP)**
+*Les individus libellés sont ceux ayant la plus grande contribution à la construction du plan.*
+*Les individus sont colorés selon leur appartenance aux modalités de la variable* Région.
+
+```{r, echo = FALSE, fig.height = 3.5, fig.width = 5.5}
+drawn <-
+c("Moye", "Sept", "Août", "juil", "Févr", "Janv", "Ampl", "Octo", 
+"Juin", "Déce", "Nove", "Mai")
+par(mar = c(4.1, 4.1, 1.1, 2.1))
+plot.PCA(res, select = drawn, axes = 1:2, choix = 'var', title = '', cex = cex)
+```
+
+**Figure 3.3 - Graphe des variables (ACP)**
+*Les variables libellées sont celles les mieux représentées sur le plan.*
+
+```{r, echo = FALSE, fig.height = 3.5, fig.width = 5.5}
+drawn <-
+c("NO", "SE", "NE", "SO")
+par(mar = c(4.1, 4.1, 1.1, 2.1))
+plot.PCA(res, select = drawn, axes = 1:2, choix = 'ind', invisible = c('ind', 'ind.sup'), title = '', cex = cex)
+```
+
+**Figure 3.4 - Graphe des modalités (ACP)**
+*Les facteurs libellés sont ceux les mieux représentés sur le plan.*
+
+* * *
+
+La **dimension 1** oppose des individus tels que *Montpellier*, *Marseille* et *Nice* (à droite du graphe, caractérisés par une coordonnée fortement positive sur l'axe)
+à des individus comme *Brest*, *Rennes* et *Lille* (à gauche du graphe, caractérisés par une coordonnée fortement négative sur l'axe).
+
+Le groupe auquel les individus *Montpellier*, *Marseille* et *Nice* appartiennent (caractérisés par une coordonnée positive sur l'axe) partage :
+
+- de fortes valeurs pour des variables telles que *Moye*, *Octo*, *Sept*, *Avri*, *Mars*, *Août*, *Nove*, *Mai*, *Juin* et *juil* (de la plus extrême à la moins extrême).
+- de faibles valeurs pour la variable *Lati*.
+
+Le groupe auquel les individus *Brest*, *Rennes* et *Lille* appartiennent (caractérisés par une coordonnées négative sur l'axe) partage :
+
+- de fortes valeurs pour la variable *Lati*.
+- de faibles valeurs pour les variables *Ampl*, *Long*, *juil*, *Juin*, *Mai* et *Août* (de la plus extrême à la moins extrême).
+
+Notons que les variables *Mars*, *Avri*, *Sept*, *Octo* et *Moye* sont extrêmement corrélées à cette dimension (corrélations respectives de 0.92, 0.95, 0.97, 0.94, 0.99). Ces variables pourraient donc résumer à elles seules la dimension 1.
+
+* * *
+
+La **dimension 2** oppose des individus tels que *Strasbourg*, *Lyon* et *Grenoble* (en haut du graphe, caractérisés par une coordonnées fortement positive sur l'axe)
+à des individus comme *Brest*, *Rennes* et *Lille* (en bas du graphe, caractérisés par une coordonnées fortement négative sur l'axe).
+
+Le groupe auquel les individus *Strasbourg*, *Lyon* et *Grenoble* appartiennent (caractérisés par une coordonnée positive sur l'axe) partage :
+
+- de faibles valeurs pour les variables *Déce*, *Janv*, *Févr* et *Nove* (de la plus extrême à la moins extrême).
+
+Le groupe auquel les individus *Brest*, *Rennes* et *Lille* appartiennent (caractérisés par une coordonnées négative sur l'axe) partage :
+
+- de fortes valeurs pour la variable *Lati*.
+- de faibles valeurs pour les variables *Ampl*, *Long*, *juil*, *Juin*, *Mai* et *Août* (de la plus extrême à la moins extrême).
+
+Notons que la variable *Ampl* est extrêmement corrélée à cette dimension (corrélation de 0.03). Cette variable pourrait donc résumer à elle seule la dimension 2.
+
+- - -
+
+
+- - -
+
+## Annexes
+```{r, comment = ''}
+dimdesc(res, axes = 1:2)
+```
+**Figure 4 - Liste des variables caractéristiques des dimensions de l'analyse.**
+
+
+
+
